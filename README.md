@@ -46,7 +46,7 @@ The path is optional. Without it, the panel opens with the Folder field ready to
 ## Use
 
 1. Pick the folder:
-   - Type a path in the **Folder** field and press Enter. `~` means your home folder.
+   - Type a full path in the **Folder** field and press Enter. It must start with `/` or `~` (your home folder).
    - Or click **Browse…** to pick a folder with the desktop folder chooser. The panel hides while the chooser is open.
    - Click **↑** to go to the parent folder.
 2. Type the text to find in **Search**. The preview lists only the files whose names change.
@@ -85,7 +85,7 @@ Then delete the hotkey line, if you added one.
 ## What it touches
 
 - It only renames files in the folder you choose. It does not edit, copy or delete file contents.
-- It lists the folder with `find <folder> -mindepth 1 -maxdepth 1`.
+- It lists the folder by changing into it (`cd -- <folder>`) and running `find . -mindepth 1 -maxdepth 1`, so a folder name is never read as a `find` option.
 - Each rename step runs `mv -n -- <old> <new>`, and first checks that the new name is free. It never overwrites a file. GNU `mv -n` reports success even when it skips a file, so the step also checks that the old name is gone and stops if it is not.
 - When a new name is another file's current name (for example `a.md` to `aa.md` while `aa.md` becomes `aaaa.md`, or two files swapping names), each file first moves to a temporary hidden name `.power-rename-<time>-<n>` in the same folder, then to its new name.
 - **Browse…** runs `omarchy-file-select --directory`, which asks the desktop portal for its folder chooser.

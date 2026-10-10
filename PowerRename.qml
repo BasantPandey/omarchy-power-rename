@@ -67,6 +67,11 @@ Item {
     root.folderMissing = false
     root.refreshPlan()
     if (!root.folder) return
+    var folderProblem = PowerRenameLogic.folderError(root.folder)
+    if (folderProblem) {
+      root.notice = folderProblem
+      return
+    }
     listProc.running = false
     listProc.command = PowerRenameLogic.listCommand(root.folder)
     listProc.running = true
@@ -454,6 +459,7 @@ Item {
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
             text: !root.folder ? "Type a folder path or click Browse."
+              : PowerRenameLogic.folderError(root.folder) ? "Type a full path, like ~/Pictures or /home/you/Pictures."
               : root.folderMissing ? "There is no folder at " + root.folder + "."
               : root.search ? "No file names match."
               : "Type the text to find. Matching files show here."

@@ -146,6 +146,9 @@ function planMoves(dir, previewResult, stamp) {
   if (!previewResult || previewResult.blocked) {
     return { ok: false, message: previewResult && previewResult.message ? previewResult.message : "Rename is blocked.", moves: [], count: 0 }
   }
+  if (folderError(dir) || !String(dir)) {
+    return { ok: false, message: folderError(dir) || "Choose a folder first.", moves: [], count: 0 }
+  }
   var base = String(dir).replace(/\/$/, "") + "/"
   var rows = (previewResult.rows || []).filter(function (row) { return row.from !== row.to })
   var sources = {}
@@ -199,8 +202,17 @@ function undoMoves(moves) {
 }
 
 // Exit 3 means the folder does not exist, so the panel can say so.
+// find starts from "." after cd, so a folder name such as "-delete" is never
+// read as a find expression.
 function listCommand(dir) {
-  return ["bash", "-c", "[ -d \"$1\" ] || exit 3; find \"$1\" -mindepth 1 -maxdepth 1 -printf '%f\\n'", "list", String(dir)]
+  return ["bash", "-c", "[ -d \"$1\" ] || exit 3; cd -- \"$1\" || exit 3; find . -mindepth 1 -maxdepth 1 -printf '%f\\n'", "list", String(dir)]
+}
+
+// A relative path would resolve against the shell's own working directory.
+function folderError(dir) {
+  var path = String(dir == null ? "" : dir)
+  if (path === "" || path.charAt(0) === "/") return ""
+  return "Type a full path that starts with / or ~."
 }
 
 function normalizeFolder(text, home) {
@@ -268,6 +280,7 @@ if (typeof module !== "undefined" && module.exports) {
     applyMoves: applyMoves,
     listCommand: listCommand,
     normalizeFolder: normalizeFolder,
+    folderError: folderError,
     parentFolder: parentFolder,
     pickCommand: pickCommand,
     pickedFolder: pickedFolder,

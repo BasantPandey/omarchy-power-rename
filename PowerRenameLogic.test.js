@@ -217,7 +217,7 @@ test("manifest.json keeps the shell contract", function () {
   assert.equal(manifest.schemaVersion, 1)
   assert.equal(manifest.id, "io.github.basantpandey.power-rename")
   assert.equal(manifest.name, "Power Rename")
-  assert.equal(manifest.version, "0.1.1")
+  assert.equal(manifest.version, "0.1.2")
   assert.equal(manifest.author, "BasantPandey")
   assert.equal(manifest.description, "Preview a bulk rename, block name clashes, and undo the change.")
   assert.deepEqual(manifest.kinds, ["overlay"])
@@ -310,4 +310,30 @@ test("the old boolean argument still means regex with exact case", function () {
   assert.equal(renamed("file-1", "file-", "item-", true), "item-1")
   const view = logic.preview(["IMG_1.jpg", "img_2.jpg"], "img", "pic", { preserveCase: true })
   assert.deepEqual(view.rows.map(function (row) { return row.to }), ["PIC_1.jpg", "pic_2.jpg"])
+})
+
+test("a folder named -delete is listed, never run as a find action", function () {
+  const work = fs.mkdtempSync(path.join(os.tmpdir(), "rename-find-"))
+  fs.mkdirSync(path.join(work, "-delete"))
+  fs.writeFileSync(path.join(work, "-delete", "inside.txt"), "in")
+  fs.writeFileSync(path.join(work, "canary.txt"), "keep")
+  for (const dir of ["-delete", path.join(work, "-delete")]) {
+    const list = logic.listCommand(dir)
+    const result = require("node:child_process").spawnSync(list[0], list.slice(1), { cwd: work, encoding: "utf8" })
+    assert.equal(fs.readFileSync(path.join(work, "canary.txt"), "utf8"), "keep", dir)
+    assert.equal(fs.existsSync(path.join(work, "-delete", "inside.txt")), true, dir)
+    assert.deepEqual(logic.namesFromListing(result.stdout), ["inside.txt"], dir)
+  }
+})
+
+test("the folder must be a full path", function () {
+  assert.equal(logic.folderError("/home/me/Pictures"), "")
+  assert.equal(logic.folderError(""), "")
+  for (const bad of ["-delete", "Pictures", "./Pictures", "../x"]) {
+    assert.match(logic.folderError(bad), /full path/, bad)
+  }
+  const view = logic.preview(["a.txt"], "a", "b", false)
+  assert.equal(logic.planMoves("-delete", view).ok, false)
+  assert.equal(logic.planMoves("Pictures", view).ok, false)
+  assert.equal(logic.planMoves("/d", view).ok, true)
 })
