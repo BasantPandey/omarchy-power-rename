@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "io.github.basantpandey.power-rename",
+  "name": "Power Rename",
+  "version": "0.1.1",
+  "author": "BasantPandey",
+  "description": "Preview a bulk rename, block name clashes, and undo the change.",
+  "kinds": ["overlay"],
+  "keepLoaded": true,
+  "entryPoints": { "overlay": "PowerRename.qml" }
+}
